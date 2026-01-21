@@ -55,16 +55,20 @@ class SheetManager:
         """유저 목록 가져오기 (숫자 변환 방지)"""
         try:
             ws = SheetManager._connect().worksheet("users")
+            # numericise_data=False: 전화번호/비번 앞의 0이 사라지지 않도록 함
             return ws.get_all_records(numericise_data=False)
         except: return []
 
     @staticmethod
     def add_user(username, password):
-        """유저 추가 (안전한 행 계산 방식)"""
+        """유저 추가 (append_row 사용 - 가장 확실한 방법)"""
         ws = SheetManager._connect().worksheet("users")
-        next_row = len(ws.get_all_values()) + 1
-        # USER_ENTERED 옵션으로 ' (작은따옴표)를 써서 강제 텍스트 저장
-        ws.update(f"A{next_row}:B{next_row}", [[f"'{username}", f"'{password}"]], value_input_option='USER_ENTERED')
+        
+        # [핵심 수정] 
+        # 1. append_row: 자동으로 가장 마지막 줄 다음에 데이터를 추가합니다. (오류 확률 0%)
+        # 2. value_input_option='USER_ENTERED': 엑셀에서 치는 것과 똑같이 동작하게 함
+        # 3. f"'{password}": 비밀번호 앞에 작은따옴표를 붙여 '031'이 숫자 31이 아닌 문자 '031'로 저장되게 함
+        ws.append_row([f"'{username}", f"'{password}"], value_input_option='USER_ENTERED')
 
     @staticmethod
     def delete_user(username):
@@ -112,8 +116,10 @@ class SheetManager:
         ]
 
         if target_row:
+            # 기존 데이터 수정 (범위 지정 업데이트)
             ws.update(f"A{target_row}:V{target_row}", [row_vals])
         else:
+            # 신규 데이터 추가
             ws.append_row(row_vals)
 
 # --- [UI] 페이지별 화면 구성 ---
@@ -122,7 +128,7 @@ def render_login():
     """로그인 페이지"""
     _, c_logo, c_text, _ = st.columns([1, 1, 5, 1], vertical_alignment="center")
     with c_logo:
-        # 로고 파일이 있으면 표시, 없으면 이모지 (복구됨)
+        # 로고 파일 우선, 없으면 이모지 fallback
         try: st.image("logo.png", width=150)
         except: st.header("⚾")
     with c_text:
@@ -325,10 +331,12 @@ def render_admin():
             if st.form_submit_button("추가"):
                 if nu and np:
                     try: 
+                        # 수정된 add_user 함수 호출
                         SheetManager.add_user(nu, np)
                         st.success(f"{nu} 추가 완료!")
                         st.rerun()
                     except Exception as e: st.error(f"오류: {e}")
+                else: st.warning("ID와 비밀번호를 입력하세요.")
         
         with c2.form("del"):
             users = SheetManager.get_users()
@@ -376,7 +384,4 @@ def main():
         with tab1:
             render_daily_log(st.session_state.username, date_str)
         with tab2:
-            render_dashboard(st.session_state.username, st.session_state.current_date)
-
-if __name__ == "__main__":
-    main()
+            render_dashboard(st.session_state.username, st.session_

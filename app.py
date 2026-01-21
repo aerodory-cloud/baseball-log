@@ -57,7 +57,9 @@ class SheetManager:
     def add_user(username, password):
         sh = SheetManager.get_connection()
         ws = sh.worksheet("users")
-        ws.append_row([username, password])
+        # [수정 1] 비밀번호 '0' 시작 문제 해결 (RAW 옵션 사용)
+        # 문자열로 강제 변환 후, 엑셀 자동 변환을 막기 위해 RAW 모드로 저장
+        ws.append_row([str(username), str(password)], value_input_option='RAW')
 
     @staticmethod
     def delete_user(username):
@@ -120,38 +122,28 @@ class SheetManager:
 # --- 페이지 설정 ---
 st.set_page_config(page_title="야구 훈련 일지", layout="wide")
 
-# 세션 상태 초기화
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 if 'username' not in st.session_state: st.session_state.username = ""
 if 'is_admin' not in st.session_state: st.session_state.is_admin = False
 
-# --- [수정됨] 로그인 페이지 (st.form 사용으로 오류 해결) ---
+# --- 로그인 페이지 ---
 def login_page():
     _, c_logo, c_text, _ = st.columns([1, 1, 5, 1], vertical_alignment="center")
     with c_logo:
-        # [수정됨] 파일 존재 여부 체크(os.path.exists)를 제거하고 직접 불러옵니다.
-        # 주의: GitHub에 올린 파일명이 정확히 'logo.png' (소문자)여야 합니다.
-        try:
-            st.image("logo.png", width=150)
-        except:
-            # 이미지를 못 찾으면 야구공 이모지로 대체
-            st.header("⚾")
+        try: st.image("logo.png", width=150)
+        except: st.header("⚾")
     with c_text:
         st.markdown("## 수지리틀야구단 선수 훈련 일지")
     
     st.write("")
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        # 1. 선수 로그인 폼
         with st.form("user_login_form"):
             st.subheader("로그인")
             username = st.text_input("이름 (ID)")
             password = st.text_input("비밀번호", type="password")
             
-            # 폼 제출 버튼
-            login_submitted = st.form_submit_button("로그인", use_container_width=True)
-            
-            if login_submitted:
+            if st.form_submit_button("로그인", use_container_width=True):
                 users = SheetManager.get_users()
                 valid = False
                 for u in users:
@@ -162,25 +154,21 @@ def login_page():
                 if valid:
                     st.session_state.logged_in = True
                     st.session_state.username = username
-                    st.session_state.is_admin = False # 일반 유저는 관리자 아님
+                    st.session_state.is_admin = False
                     st.rerun()
                 else:
                     st.error("정보가 일치하지 않습니다.")
 
         st.divider()
-        
-        # 2. 관리자 로그인 (폼 분리)
         with st.expander("관리자 접속"):
             with st.form("admin_login_form"):
                 st.write("관리자 인증")
                 pin = st.text_input("PIN 번호", type="password")
-                admin_submitted = st.form_submit_button("관리자 로그인")
-                
-                if admin_submitted:
+                if st.form_submit_button("관리자 로그인"):
                     if pin == "98770491":
                         st.session_state.logged_in = True
                         st.session_state.username = "관리자"
-                        st.session_state.is_admin = True # 관리자 권한 부여
+                        st.session_state.is_admin = True
                         st.rerun()
                     else:
                         st.error("PIN 번호가 올바르지 않습니다.")
@@ -219,7 +207,7 @@ def render_daily_log(username, date_str, data):
         st.markdown("#### 훈련 내용")
         col_content_1, col_content_2 = st.columns(2)
         with col_content_2:
-            st.info("💪 개인 훈련")
+            st.info("💪 개인 훈련 (Personal Training)")
             def p_input(lbl, key, step=10):
                 pc1, pc2 = st.columns([2, 1])
                 pc1.write(f"• {lbl}")
@@ -236,16 +224,21 @@ def render_daily_log(username, date_str, data):
             pc_etc1.write("• 기타 훈련"); p_etc = pc_etc2.text_input("기타", value=get_str('p_etc', data), label_visibility="collapsed")
 
         with col_content_1:
-            st.success("⚾ 구단 훈련")
+            st.success("⚾ 구단 훈련 (Team Training)")
             gudan_content = st.text_area("구단 훈련 내용", value=get_str('gudan_content', data), height=380, label_visibility="collapsed")
 
         st.markdown("---")
         col_feed_1, col_feed_2 = st.columns(2)
         with col_feed_2:
-            st.error("🧠 나의 분석"); st.caption("잘된 부분"); sg = st.text_area("good", value=get_str('self_good', data), height=80, label_visibility="collapsed")
-            st.caption("부족한 부분"); sb = st.text_area("bad", value=get_str('self_bad', data), height=80, label_visibility="collapsed")
+            # [수정 3] 이모지 변경: 🧠 -> ✏️ (연필)
+            st.error("✏️ 나의 분석 (Self Feedback)")
+            # [수정 2] 입력창 디자인 개선: caption 제거 및 placeholder 적용
+            sg = st.text_area("good", value=get_str('self_good', data), height=80, placeholder="잘된 부분 (Good)", label_visibility="collapsed")
+            sb = st.text_area("bad", value=get_str('self_bad', data), height=80, placeholder="부족한 부분 (Bad)", label_visibility="collapsed")
         with col_feed_1:
-            st.warning("🗣️ 코치 피드백"); cfb = st.text_area("coach", value=get_str('coach_feedback', data), height=220, label_visibility="collapsed")
+            # [수정 3] 이모지 변경: 🗣️ -> 📢 (호루라기/확성기)
+            st.warning("📢 코치 피드백 (Coach's Feedback)")
+            cfb = st.text_area("coach", value=get_str('coach_feedback', data), height=220, label_visibility="collapsed")
 
         st.markdown("---")
         promise = st.text_area("다짐", value=get_str('promise', data), height=70, placeholder="오늘의 다짐", label_visibility="collapsed")

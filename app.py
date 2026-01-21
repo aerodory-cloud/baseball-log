@@ -384,4 +384,7 @@ def main():
         with tab1:
             render_daily_log(st.session_state.username, date_str)
         with tab2:
-            render_dashboard(st.session_state.username, st.session_
+            render_dashboard(st.session_state.username, st.session_state.current_date)
+
+if __name__ == "__main__":
+    main()

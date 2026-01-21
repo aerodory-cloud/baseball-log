@@ -23,7 +23,7 @@ if not hasattr(st_image, 'image_to_url'):
         return ""
     st_image.image_to_url = custom_image_to_url
 
-# [패치] 그래프 한글 폰트 (Windows 및 클라우드 호환)
+# [패치] 그래프 한글 폰트
 if platform.system() == 'Windows':
     try:
         plt.rc('font', family='Malgun Gothic')
@@ -38,7 +38,6 @@ class SheetManager:
 
     @staticmethod
     def get_connection():
-        # Streamlit Secrets에서 인증 정보 가져오기
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
         creds_dict = dict(st.secrets["gcp_service_account"])
         creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
@@ -50,16 +49,18 @@ class SheetManager:
         try:
             sh = SheetManager.get_connection()
             worksheet = sh.worksheet("users")
-            return worksheet.get_all_records()
+            # [수정] numericise_data=False: 숫자처럼 보이는 문자(031)를 숫자로 자동 변환하지 않도록 설정
+            return worksheet.get_all_records(numericise_data=False)
         except: return []
 
     @staticmethod
     def add_user(username, password):
         sh = SheetManager.get_connection()
         ws = sh.worksheet("users")
-        # [수정 1] 비밀번호 '0' 시작 문제 해결 (RAW 옵션 사용)
-        # 문자열로 강제 변환 후, 엑셀 자동 변환을 막기 위해 RAW 모드로 저장
-        ws.append_row([str(username), str(password)], value_input_option='RAW')
+        # [수정] 0으로 시작하는 비밀번호(031)가 31로 변환되는 것을 막기 위해
+        # 앞에 ' (작은따옴표)를 붙여 텍스트로 강제 인식시킵니다.
+        # value_input_option='USER_ENTERED'를 써야 '가 처리됩니다.
+        ws.append_row([f"'{username}", f"'{password}"], value_input_option='USER_ENTERED')
 
     @staticmethod
     def delete_user(username):
@@ -130,6 +131,7 @@ if 'is_admin' not in st.session_state: st.session_state.is_admin = False
 def login_page():
     _, c_logo, c_text, _ = st.columns([1, 1, 5, 1], vertical_alignment="center")
     with c_logo:
+        # [수정] 파일 존재 여부 체크 대신 try-except로 로고 로드
         try: st.image("logo.png", width=150)
         except: st.header("⚾")
     with c_text:
@@ -147,6 +149,7 @@ def login_page():
                 users = SheetManager.get_users()
                 valid = False
                 for u in users:
+                    # 데이터 조회 시 문자열로 가져오지만, 안전을 위해 한번 더 str() 변환하여 비교
                     if str(u['username']) == username and str(u['password']) == password:
                         valid = True
                         break
@@ -160,6 +163,7 @@ def login_page():
                     st.error("정보가 일치하지 않습니다.")
 
         st.divider()
+        
         with st.expander("관리자 접속"):
             with st.form("admin_login_form"):
                 st.write("관리자 인증")
@@ -207,7 +211,7 @@ def render_daily_log(username, date_str, data):
         st.markdown("#### 훈련 내용")
         col_content_1, col_content_2 = st.columns(2)
         with col_content_2:
-            st.info("💪 개인 훈련 (Personal Training)")
+            st.info("💪 개인 훈련")
             def p_input(lbl, key, step=10):
                 pc1, pc2 = st.columns([2, 1])
                 pc1.write(f"• {lbl}")
@@ -224,21 +228,16 @@ def render_daily_log(username, date_str, data):
             pc_etc1.write("• 기타 훈련"); p_etc = pc_etc2.text_input("기타", value=get_str('p_etc', data), label_visibility="collapsed")
 
         with col_content_1:
-            st.success("⚾ 구단 훈련 (Team Training)")
+            st.success("⚾ 구단 훈련")
             gudan_content = st.text_area("구단 훈련 내용", value=get_str('gudan_content', data), height=380, label_visibility="collapsed")
 
         st.markdown("---")
         col_feed_1, col_feed_2 = st.columns(2)
         with col_feed_2:
-            # [수정 3] 이모지 변경: 🧠 -> ✏️ (연필)
-            st.error("✏️ 나의 분석 (Self Feedback)")
-            # [수정 2] 입력창 디자인 개선: caption 제거 및 placeholder 적용
-            sg = st.text_area("good", value=get_str('self_good', data), height=80, placeholder="잘된 부분 (Good)", label_visibility="collapsed")
-            sb = st.text_area("bad", value=get_str('self_bad', data), height=80, placeholder="부족한 부분 (Bad)", label_visibility="collapsed")
+            st.error("🧠 나의 분석"); st.caption("잘된 부분"); sg = st.text_area("good", value=get_str('self_good', data), height=80, label_visibility="collapsed")
+            st.caption("부족한 부분"); sb = st.text_area("bad", value=get_str('self_bad', data), height=80, label_visibility="collapsed")
         with col_feed_1:
-            # [수정 3] 이모지 변경: 🗣️ -> 📢 (호루라기/확성기)
-            st.warning("📢 코치 피드백 (Coach's Feedback)")
-            cfb = st.text_area("coach", value=get_str('coach_feedback', data), height=220, label_visibility="collapsed")
+            st.warning("🗣️ 코치 피드백"); cfb = st.text_area("coach", value=get_str('coach_feedback', data), height=220, label_visibility="collapsed")
 
         st.markdown("---")
         promise = st.text_area("다짐", value=get_str('promise', data), height=70, placeholder="오늘의 다짐", label_visibility="collapsed")
@@ -316,10 +315,13 @@ def admin_page():
         with c1.form("add_user"):
             nu = st.text_input("새 ID"); np = st.text_input("새 비번", type="password")
             if st.form_submit_button("추가") and nu and np:
-                SheetManager.add_user(nu, np); st.rerun()
+                SheetManager.add_user(nu, np)
+                st.success(f"{nu} 님 추가 완료")
+                st.rerun()
         with c2.form("del_user"):
             users = SheetManager.get_users()
-            du = st.selectbox("삭제할 ID", [u['username'] for u in users] if users else [])
+            # 삭제 목록에 표시할 때 str()로 감싸 안전하게 표시
+            du = st.selectbox("삭제할 ID", [str(u['username']) for u in users] if users else [])
             if st.form_submit_button("삭제") and du:
                 if du != "관리자": SheetManager.delete_user(du); st.rerun()
                 else: st.error("불가")

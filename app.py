@@ -55,16 +55,18 @@ class SheetManager:
         """유저 목록 가져오기"""
         try:
             ws = SheetManager._connect().worksheet("users")
-            # numericise_data=False: 숫자 변환 방지 (031 -> 031 유지)
+            # [복구] 기존 아이디 로그인을 위해 numericise_data=False 필수
+            # 이걸 빼면 '031'을 31(숫자)로 가져와서 로그인이 안됩니다.
             return ws.get_all_records(numericise_data=False)
         except: return []
 
     @staticmethod
     def add_user(username, password):
-        """유저 추가 (append_row 사용)"""
+        """유저 추가 (단순 추가 방식)"""
         ws = SheetManager._connect().worksheet("users")
-        # 0 인식 문제 해결을 위해 단순 append_row 사용 (엑셀처럼 동작)
-        ws.append_row([username, password])
+        # [원복] 가장 단순하게 맨 뒤에 추가하는 방식
+        # 엑셀 특성상 숫자 앞의 0은 사라질 수 있지만, 등록은 무조건 됩니다.
+        ws.append_row([str(username), str(password)])
 
     @staticmethod
     def delete_user(username):
@@ -133,7 +135,8 @@ def render_login():
             u_in = st.text_input("아이디"); p_in = st.text_input("비밀번호", type="password")
             if st.form_submit_button("접속하기", use_container_width=True):
                 users = SheetManager.get_users()
-                if any(str(u['username']).strip() == u_in.strip() and str(u['password']).strip() == p_in.strip() for u in users):
+                # [수정] 어떤 형태로 들어있든 무조건 문자로 변환해서 비교 (로그인 오류 해결)
+                if any(str(u['username']).strip() == str(u_in).strip() and str(u['password']).strip() == str(p_in).strip() for u in users):
                     st.session_state.logged_in = True
                     st.session_state.username = u_in
                     st.session_state.is_admin = False
@@ -209,7 +212,6 @@ def render_daily_log(username, date_str):
         fc1, fc2 = st.columns(2)
         with fc2:
             st.error("🧠 나의 분석 (Self Feedback)")
-            # [디자인 원복] 제목을 박스 안(placeholder)으로 넣고 라벨 숨김
             good = st.text_area("잘된 부분", value=txt('self_good'), height=80, placeholder="잘된 부분", label_visibility="collapsed")
             bad = st.text_area("부족한 부분", value=txt('self_bad'), height=80, placeholder="부족한 부분", label_visibility="collapsed")
         with fc1:
@@ -217,11 +219,10 @@ def render_daily_log(username, date_str):
             coach = st.text_area("coach", value=txt('coach_feedback'), height=220, label_visibility="collapsed")
 
         st.divider()
-        # [디자인 원복] text_area 사용, 라벨 숨김, placeholder 적용
+        
         prom = st.text_area("다짐", value=txt('promise'), height=70, placeholder="오늘의 다짐", label_visibility="collapsed")
         memo = st.text_area("메모", value=txt('memo'), height=70, placeholder="추가 메모", label_visibility="collapsed")
 
-        # [버튼명 원복]
         if st.form_submit_button("💾 금일 훈련 저장하기", type="primary"):
             SheetManager.save_log({
                 'username': username, 'date': date_str, 'log_type': 'daily',

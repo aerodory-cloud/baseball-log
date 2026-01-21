@@ -52,23 +52,21 @@ class SheetManager:
 
     @staticmethod
     def get_users():
-        """유저 목록 가져오기 (숫자 변환 방지)"""
+        """유저 목록 가져오기"""
         try:
             ws = SheetManager._connect().worksheet("users")
-            # numericise_data=False: 전화번호/비번 앞의 0이 사라지지 않도록 함
-            return ws.get_all_records(numericise_data=False)
+            # [원복] 복잡한 옵션 제거하고 기본 호출로 변경
+            return ws.get_all_records()
         except: return []
 
     @staticmethod
     def add_user(username, password):
-        """유저 추가 (append_row 사용 - 가장 확실한 방법)"""
+        """유저 추가 (기능 원복 - 가장 단순한 방식)"""
         ws = SheetManager._connect().worksheet("users")
         
-        # [핵심 수정] 
-        # 1. append_row: 자동으로 가장 마지막 줄 다음에 데이터를 추가합니다. (오류 확률 0%)
-        # 2. value_input_option='USER_ENTERED': 엑셀에서 치는 것과 똑같이 동작하게 함
-        # 3. f"'{password}": 비밀번호 앞에 작은따옴표를 붙여 '031'이 숫자 31이 아닌 문자 '031'로 저장되게 함
-        ws.append_row([f"'{username}", f"'{password}"], value_input_option='USER_ENTERED')
+        # [원복] '0' 인식 코드 제거하고, 가장 기본적인 추가 방식으로 변경
+        # 이제 무조건 등록은 되지만, 엑셀 특성상 숫자 앞의 0은 사라질 수 있습니다.
+        ws.append_row([username, password])
 
     @staticmethod
     def delete_user(username):
@@ -331,7 +329,7 @@ def render_admin():
             if st.form_submit_button("추가"):
                 if nu and np:
                     try: 
-                        # 수정된 add_user 함수 호출
+                        # [확인] 단순 추가 방식으로 호출
                         SheetManager.add_user(nu, np)
                         st.success(f"{nu} 추가 완료!")
                         st.rerun()

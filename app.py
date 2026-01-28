@@ -170,17 +170,20 @@ def render_daily_log(username, date_str):
         top_left, top_right = st.columns(2)
         
         with top_left:
-            c1, c2 = st.columns([1, 4])
+            # [핵심 수정] vertical_alignment="center" 옵션 추가 -> 글자와 입력창의 높이 중심을 자동으로 맞춤
+            
+            c1, c2 = st.columns([1, 4], vertical_alignment="center")
             c1.markdown("**⏱️ 훈련 시간**"); dur = c2.number_input("분", value=val('duration'), step=10, label_visibility="collapsed", key=f"dur_{date_str}")
             
-            c3, c4 = st.columns([1, 4])
+            c3, c4 = st.columns([1, 4], vertical_alignment="center")
             c3.markdown("**📍 훈련 장소**"); locs = ["실외 구장", "실내 구장", "집", "기타"]
             loc = c4.radio("장소", locs, index=locs.index(txt('location')) if txt('location') in locs else 0, horizontal=True, label_visibility="collapsed", key=f"loc_{date_str}")
             
             lvls = ["최상", "상", "중", "하", "최하"]
-            c5, c6 = st.columns([1, 4])
+            c5, c6 = st.columns([1, 4], vertical_alignment="center")
             c5.markdown("**🔥 훈련 강도**"); inte = c6.radio("강도", lvls, index=lvls.index(txt('intensity')) if txt('intensity') in lvls else 2, horizontal=True, label_visibility="collapsed", key=f"inte_{date_str}")
-            c7, c8 = st.columns([1, 4])
+            
+            c7, c8 = st.columns([1, 4], vertical_alignment="center")
             c7.markdown("**😊 훈련 만족도**"); sat = c8.radio("만족", lvls, index=lvls.index(txt('satisfaction')) if txt('satisfaction') in lvls else 2, horizontal=True, label_visibility="collapsed", key=f"sat_{date_str}")
 
         st.markdown("<hr style='margin: 10px 0; border-top: 1px solid #f0f2f6; border-bottom: none;'>", unsafe_allow_html=True)

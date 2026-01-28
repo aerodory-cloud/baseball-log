@@ -179,7 +179,7 @@ def render_daily_log(username, date_str):
         c7, c8 = st.columns([1, 4])
         c7.markdown("**😊 훈련 만족도**"); sat = c8.radio("만족", lvls, index=lvls.index(txt('satisfaction')) if txt('satisfaction') in lvls else 2, horizontal=True, label_visibility="collapsed", key=f"sat_{date_str}")
 
-        st.divider()
+        st.markdown("<hr style='margin: 10px 0; border-top: 1px solid #f0f2f6; border-bottom: none;'>", unsafe_allow_html=True)
         
         wc1, wc2 = st.columns(2)
         with wc2:
@@ -203,7 +203,7 @@ def render_daily_log(username, date_str):
             st.success("⚾ 구단 훈련 (Team Training)")
             gudan = st.text_area("내용을 입력하세요", value=txt('gudan_content'), height=380, label_visibility="collapsed", key=f"gudan_{date_str}")
 
-        st.divider()
+        st.markdown("<hr style='margin: 10px 0; border-top: 1px solid #f0f2f6; border-bottom: none;'>", unsafe_allow_html=True)
         
         fc1, fc2 = st.columns(2)
         with fc2:
@@ -215,7 +215,8 @@ def render_daily_log(username, date_str):
             st.warning("🗣️ 코치 피드백 (Coach's Feedback)")
             coach = st.text_area("coach", value=txt('coach_feedback'), height=180, label_visibility="collapsed", key=f"coach_{date_str}")
 
-        st.divider()
+        st.markdown("<hr style='margin: 10px 0; border-top: 1px solid #f0f2f6; border-bottom: none;'>", unsafe_allow_html=True)
+
         # [수정 2] 다짐/메모를 박스 안 placeholder로 이동 및 라벨 숨김
         prom = st.text_area("다짐", value=txt('promise'), height=80, placeholder="오늘의 다짐", label_visibility="collapsed", key=f"prom_{date_str}")
         memo = st.text_area("메모", value=txt('memo'), height=80, placeholder="추가 메모", label_visibility="collapsed", key=f"memo_{date_str}")

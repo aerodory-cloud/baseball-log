@@ -182,8 +182,8 @@ def render_daily_log(username, date_str):
         st.markdown("<hr style='margin: 10px 0; border-top: 1px solid #f0f2f6; border-bottom: none;'>", unsafe_allow_html=True)
         
         wc1, wc2 = st.columns(2)
-        with wc2: # 우측: 개인 훈련 (구단 훈련보다 살짝 진한 초록색: #c3e6cb)
-            st.markdown('<div style="background-color: #c3e6cb; padding: 15px; border-radius: 10px; margin-bottom: 10px; color: black;"><b>💪 개인 훈련 (Personal Training)</b></div>', unsafe_allow_html=True)
+        with wc2:
+            st.info("💪 개인 훈련 (Personal Training)")
             def p_row(label, k, step=10):
                 rc1, rc2 = st.columns([2, 1])
                 rc1.write(f"• {label}")
@@ -199,11 +199,8 @@ def render_daily_log(username, date_str):
             ec1, ec2 = st.columns([1, 2])
             ec1.write("• 기타 훈련"); p_etc = ec2.text_input("기타", value=txt('p_etc'), label_visibility="collapsed", key=f"petc_{date_str}")
 
-        ec1, ec2 = st.columns([1, 2])
-            ec1.write("• 기타 훈련"); p_etc = ec2.text_input("기타", value=txt('p_etc'), label_visibility="collapsed", key=f"petc_{date_str}")
-
-        with wc1: # 좌측: 구단 훈련 (기본 연한 초록색: #d4edda)
-            st.markdown('<div style="background-color: #d4edda; padding: 15px; border-radius: 10px; margin-bottom: 10px; color: black;"><b>⚾ 구단 훈련 (Team Training)</b></div>', unsafe_allow_html=True)
+        with wc1:
+            st.success("⚾ 구단 훈련 (Team Training)")
             gudan = st.text_area("내용을 입력하세요", value=txt('gudan_content'), height=380, label_visibility="collapsed", key=f"gudan_{date_str}")
 
         st.markdown("<hr style='margin: 10px 0; border-top: 1px solid #f0f2f6; border-bottom: none;'>", unsafe_allow_html=True)

@@ -212,7 +212,7 @@ def render_daily_log(username, date_str):
             good = st.text_area("Good", value=txt('self_good'), height=80, placeholder="Good", label_visibility="collapsed", key=f"good_{date_str}")
             bad = st.text_area("Bad", value=txt('self_bad'), height=80, placeholder="Bad", label_visibility="collapsed", key=f"bad_{date_str}")
         with fc1:
-            st.warning("📣 코치 피드백 (Coach's Feedback)")
+            st.warning("📣 피드백 (Coach's Feedback)")
             coach = st.text_area("coach", value=txt('coach_feedback'), height=175, label_visibility="collapsed", key=f"coach_{date_str}")
 
         st.markdown("<hr style='margin: 10px 0; border-top: 1px solid #f0f2f6; border-bottom: none;'>", unsafe_allow_html=True)

@@ -221,7 +221,7 @@ def render_daily_log(username, date_str):
         prom = st.text_area("다짐", value=txt('promise'), height=80, placeholder="오늘의 다짐", label_visibility="collapsed", key=f"prom_{date_str}")
         memo = st.text_area("메모", value=txt('memo'), height=80, placeholder="추가 메모", label_visibility="collapsed", key=f"memo_{date_str}")
 
-        if st.form_submit_button("💾 금일 훈련 저장하기", type="primary"):
+        if st.form_submit_button("💾 훈련 실적 저장", type="primary"):
             SheetManager.save_log({
                 'username': username, 'date': date_str, 'log_type': 'daily',
                 'duration': dur, 'location': loc, 'intensity': inte, 'satisfaction': sat,

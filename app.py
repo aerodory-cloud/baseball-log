@@ -262,6 +262,9 @@ def render_dashboard(username, current_date):
     df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
     today = pd.Timestamp(current_date)
     
+    # [수정 1] "총 총" 중복 방지: 항목 이름이 이미 '총'으로 시작하면 그대로 사용
+    label_name = sel if sel.startswith("총") else f"총 {sel}"
+
     def draw_chart(title, data, idx, fmt, color, x_labels=None):
         st.subheader(title)
         if data.empty: st.caption("데이터 없음"); st.divider(); return
@@ -274,9 +277,11 @@ def render_dashboard(username, current_date):
         avg = int(total/active) if active > 0 else 0
         
         m1, m2 = st.columns(2)
-        m1.metric(f"{sel}", f"{total} {unit}"); m2.metric("일 평균", f"{avg} {unit}")
+        # 수정된 label_name 사용
+        m1.metric(label_name, f"{total} {unit}"); m2.metric("일 평균", f"{avg} {unit}")
         
         fig, ax = plt.subplots(figsize=(10, 3.5))
+        # x_labels가 있으면 그것을 쓰고(영어 월), 없으면 날짜 포맷 사용
         labels = x_labels if x_labels else (final.index.strftime(fmt) if fmt else final.index)
         ax.bar(labels, final.values, color=color)
         
@@ -285,17 +290,24 @@ def render_dashboard(username, current_date):
             
         st.pyplot(fig); st.divider()
 
+    # 1. 주간
     s_w = today - timedelta(days=today.weekday())
     draw_chart("📅 이번 주", df[(df['date'] >= s_w) & (df['date'] <= s_w + timedelta(6))], 
                pd.date_range(s_w, periods=7), '%a', 'skyblue')
     
+    # 2. 월간
     s_m = today.replace(day=1); n_m = (s_m + timedelta(32)).replace(day=1)
     draw_chart("📅 이번 달", df[(df['date'] >= s_m) & (df['date'] < n_m)], 
                pd.date_range(s_m, n_m - timedelta(1)), '%d', 'lightgreen')
     
+    # 3. 연간
     y_df = df[df['date'].dt.year == today.year].copy()
     y_df['month'] = y_df['date'].dt.month
-    draw_chart("📅 올 한해", y_df, range(1, 13), None, 'salmon', [f"{i}월" for i in range(1, 13)])
+    
+    # [수정 2] 영어 약자(JAN, FEB...) 사용 -> 폰트 설치 없이도 네모 깨짐(ㅁ) 해결!
+    english_months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+    
+    draw_chart("📅 올 한해", y_df, range(1, 13), None, 'salmon', english_months)
 
 def render_admin():
     """관리자 페이지"""

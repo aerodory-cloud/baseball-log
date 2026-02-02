@@ -29,24 +29,13 @@ if not hasattr(st_image, 'image_to_url'):
         return ""
     st_image.image_to_url = custom_image_to_url
 
-# [수정 2] 클라우드(Linux) 환경에서도 한글(나눔고딕)이 나오도록 폰트 자동 설치 코드 추가
-import matplotlib.font_manager as fm
-
 if platform.system() == 'Windows':
-    plt.rc('font', family='Malgun Gothic')
+    try:
+        plt.rc('font', family='Malgun Gothic')
+        plt.rcParams['axes.unicode_minus'] = False
+    except: pass
 else:
-    # 폰트 파일이 없으면 구글 폰트에서 다운로드 (나눔고딕)
-    font_path = 'NanumGothic.ttf'
-    if not os.path.exists(font_path):
-        import urllib.request
-        url = 'https://github.com/google/fonts/raw/main/ofl/nanumgothic/NanumGothic-Regular.ttf'
-        urllib.request.urlretrieve(url, font_path)
-        
-    # 다운로드한 폰트 적용
-    font_prop = fm.FontProperties(fname=font_path)
-    plt.rc('font', family=font_prop.get_name())
-
-plt.rcParams['axes.unicode_minus'] = False
+    plt.rcParams['axes.unicode_minus'] = False
 
 # --- [Core] 구글 시트 데이터베이스 매니저 ---
 class SheetManager:

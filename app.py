@@ -166,7 +166,7 @@ def render_daily_log(username, date_str):
     with st.form("daily_form"):
         st.markdown(f"### 📝 Training Journal : {date_str}")
         
-        # [수정] 전체 너비를 반으로 나누고, 왼쪽(top_left)에만 입력창을 배치
+# [수정] 전체 너비를 반으로 나누고, 왼쪽(top_left)에만 입력창을 배치
         top_left, top_right = st.columns(2)
         
         with top_left:
@@ -175,8 +175,9 @@ def render_daily_log(username, date_str):
             c1, c2 = st.columns([1, 4], vertical_alignment="center")
             c1.markdown("**⏱️ 훈련 시간**"); dur = c2.number_input("분", value=val('duration'), step=10, label_visibility="collapsed", key=f"dur_{date_str}")
             
-            c3, c4 = st.columns([1, 5], vertical_alignment="center")
-            c3.markdown("**📍 훈련 장소**"); locs = ["실외 구장", "실내 구장", "연습 경기", "집", "기타"]
+            # [수정] 비율을 [1, 5] -> [1, 4]로 변경하여 위아래 줄 맞춤
+            c3, c4 = st.columns([1, 4], vertical_alignment="center")
+            c3.markdown("**📍 훈련 장소**"); locs = ["실외 구장", "실내 구장", "집", "연습 경기", "기타"]
             loc = c4.radio("장소", locs, index=locs.index(txt('location')) if txt('location') in locs else 0, horizontal=True, label_visibility="collapsed", key=f"loc_{date_str}")
             
             lvls = ["최상", "상", "중", "하", "최하"]

@@ -177,7 +177,7 @@ def render_daily_log(username, date_str):
             
             # [수정] 비율을 [1, 5] -> [1, 4]로 변경하여 위아래 줄 맞춤
             c3, c4 = st.columns([1, 4], vertical_alignment="center")
-            c3.markdown("**📍 훈련 장소**"); locs = ["실외 구장", "실내 구장", "집", "연습 경기", "기타"]
+            c3.markdown("**📍 훈련 장소**"); locs = ["실외 구장", "실내 구장", "연습 경기", "집", "기타"]
             loc = c4.radio("장소", locs, index=locs.index(txt('location')) if txt('location') in locs else 0, horizontal=True, label_visibility="collapsed", key=f"loc_{date_str}")
             
             lvls = ["최상", "상", "중", "하", "최하"]

@@ -118,8 +118,7 @@ def render_daily_log(username, date_str, data):
         
         c3, c4 = st.columns([1, 5])
         c3.markdown("**훈련 장소**")
-        # [수정] "연습 경기" 항목 추가
-        loc_opts = ["실외 구장", "실내 구장", "집", "연습 경기", "기타"] 
+        loc_opts = ["실외 구장", "실내 구장", "집", "기타"]
         loc_idx = loc_opts.index(data['location']) if data and data['location'] in loc_opts else 0
         location = c4.radio("장소", loc_opts, index=loc_idx, horizontal=True, label_visibility="collapsed")
         
